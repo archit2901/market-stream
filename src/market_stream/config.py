@@ -38,6 +38,19 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO")
     log_format: str = Field(default="json", description="'json' or 'console'")
 
+    # Finnhub
+    finnhub_api_key: str = Field(default="")
+    finnhub_base_url: str = Field(default="https://finnhub.io/api/v1")
+    finnhub_poll_interval_seconds: float = Field(default=30.0)
+    finnhub_request_timeout_seconds: float = Field(default=10.0)
+    finnhub_symbols: list[str] = Field(
+        default_factory=lambda: ["AAPL", "MSFT", "NVDA", "JPM", "TSLA", "WMT", "XOM"]
+    )
+
+    # Kafka topics — add the two new ones
+    kafka_stocks_raw_topic: str = Field(default="stocks.raw")
+    kafka_prices_normalized_topic: str = Field(default="prices.normalized")
+
 
 @lru_cache
 def get_settings() -> Settings:

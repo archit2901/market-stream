@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytest
+from typing import Generator
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
 from market_stream.producers.crypto import CryptoProducer
@@ -38,7 +39,7 @@ def _make_msg(symbol: str, price: str) -> CryptoRawMessage:
 
 
 @pytest.fixture(autouse=True)
-def override_settings(monkeypatch: pytest.MonkeyPatch, kafka_bootstrap: str) -> None:
+def override_settings(monkeypatch: pytest.MonkeyPatch, kafka_bootstrap: str) -> Generator[None, None, None]:
     """Point Settings at the test container and shorten the poll interval."""
     from market_stream.config import get_settings
 
@@ -92,7 +93,7 @@ async def test_producer_publishes_messages_to_topic(
                     received.append(
                         {
                             "key": msg.key.decode() if msg.key else None,
-                            "value": json.loads(msg.value.decode()),
+                            "value": json.loads(msg.value.decode()) if msg.value is not None else None,
                             "partition": msg.partition,
                         }
                     )

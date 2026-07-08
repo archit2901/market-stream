@@ -23,3 +23,24 @@ class CryptoRawMessage(BaseModel):
     ingestion_timestamp: datetime = Field(
         ..., description="When our producer polled the API"
     )
+
+class StockRawMessage(BaseModel):
+    """A single equity quote observation, as published to the `stocks.raw` topic.
+
+    Same design as CryptoRawMessage: preserve source-specific fields intentionally,
+    the normalizer will project this to the unified schema later.
+    """
+
+    source: Literal["finnhub"] = "finnhub"
+    symbol: str = Field(..., description="Ticker symbol, e.g. 'AAPL'")
+    price_usd: Decimal = Field(..., description="Current price at source_timestamp")
+    previous_close: Decimal = Field(..., description="Previous session's close")
+    day_high: Decimal
+    day_low: Decimal
+    day_open: Decimal
+    source_timestamp: datetime = Field(
+        ..., description="When the exchange generated this quote"
+    )
+    ingestion_timestamp: datetime = Field(
+        ..., description="When our producer polled the API"
+    )
