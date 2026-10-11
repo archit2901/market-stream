@@ -25,6 +25,8 @@ class Normalizer:
         self._producer = producer
         self._settings = get_settings()
         self._shutdown_event = asyncio.Event()
+        # Newest source_timestamp published per (asset_class, symbol), used to drop duplicates.
+        self._last_source_ts: dict[tuple[str, str], datetime] = {}
 
     def request_shutdown(self) -> None:
         log.info("shutdown requested")
@@ -64,6 +66,17 @@ class Normalizer:
                 error=str(exc),
             )
             return
+
+        dedupe_key = (tick.asset_class, tick.symbol)
+        last_ts = self._last_source_ts.get(dedupe_key)
+        if last_ts is not None and tick.source_timestamp <= last_ts:
+            log.debug(
+                "duplicate tick dropped",
+                symbol=tick.symbol,
+                source_timestamp=tick.source_timestamp.isoformat(),
+            )
+            return
+        self._last_source_ts[dedupe_key] = tick.source_timestamp
 
         await self._producer.send_and_wait(
             self._settings.kafka_prices_normalized_topic,
