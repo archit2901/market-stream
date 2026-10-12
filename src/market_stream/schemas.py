@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, Field
+AssetClass = Literal["crypto", "equity"]
 
 
 class CryptoRawMessage(BaseModel):
@@ -54,7 +55,7 @@ class PriceTick(BaseModel):
     """
 
     symbol: str = Field(..., description="Ticker symbol, e.g. 'BTC' or 'AAPL'")
-    asset_class: Literal["crypto", "equity"]
+    asset_class: AssetClass
     price_usd: Decimal
     source: Literal["coingecko", "finnhub"]
 
@@ -72,3 +73,23 @@ class PriceTick(BaseModel):
         default=False,
         description="True when the price is known to be old, e.g. equities outside market hours",
     )
+
+class WindowStats(BaseModel):
+    """Statistics for one asset over one rolling window (e.g. the last 15 minutes)."""
+
+    open_price: Decimal = Field(..., description="First price inside the window")
+    high: Decimal
+    low: Decimal
+    change_pct: Decimal = Field(..., description="Percent change from open_price to the latest price")
+    tick_count: int = Field(..., description="How many ticks fell inside the window")
+
+
+class AssetSnapshot(BaseModel):
+    """Current rolling-window state for one asset. This is what gets written to Redis."""
+
+    symbol: str
+    asset_class: AssetClass
+    latest_price: Decimal
+    latest_source_timestamp: datetime
+    is_stale: bool
+    windows: dict[str, WindowStats] = Field(..., description="Keyed by window name: '5m', '15m', '1h'")

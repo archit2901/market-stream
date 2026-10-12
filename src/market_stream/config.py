@@ -14,6 +14,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # Redis
+    redis_url: str = Field(default="redis://localhost:6380/0")
+
     # Kafka
     kafka_bootstrap_servers: str = Field(default="localhost:9092")
     kafka_crypto_raw_topic: str = Field(default="crypto.raw")
